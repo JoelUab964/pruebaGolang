@@ -1,34 +1,39 @@
+
 package main
+
 import (
-	"time"
+	"encoding/json"
+	"net/http"
 	"os"
-    "net/http"
+	"time"
 )
-//creamos una estructura donde devolvemos el tiempo y hostname 
-type HansOn struct {
-    Time     time.Time `json:"time"`
-    Hostname string   `json:"hostname"`
+
+// Creamos una estructura donde devolvemos el tiempo y hostname
+type HandsOn struct {
+	Time     time.Time `json:"time"`
+	Hostname string    `json:"hostname"`
 }
 
 func ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	//creamos un objeto con nuestra respuesta 
+	// Creamos un objeto con nuestra respuesta
 	resp := HandsOn{
-	    Time: time.Now(),
-        Hostname: os.Getent("HOSTNAME"),
+		Time:     time.Now(),
+		Hostname: os.Getenv("HOSTNAME"),
 	}
-	//usamos una libreria para volvera string
+
+	// Convertimos el objeto a JSON
 	jsonResp, err := json.Marshal(&resp)
 	if err != nil {
-	    w.Write([]byte("Error"))
-	    return
+		http.Error(w, "Error", http.StatusInternalServerError)
+		return
 	}
 
-    w.WriteHeader(http.StatusOK)
-    w.Header().Set("Content-Type", "application/json")
-   w.Write([]byte(resp))
-}
-func main() {
-        http.HandleFunc("/", ServeHTTP)
-        http.ListenAndServe(":9090", nil)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResp)
 }
 
+func main() {
+	http.HandleFunc("/", ServeHTTP)
+	http.ListenAndServe(":9090", nil)
+}
