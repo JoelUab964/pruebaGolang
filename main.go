@@ -23,6 +23,10 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Convertimos el objeto a JSON
 	jsonResp, err := json.Marshal(&resp)
+	if r.URL.Path != "/"{
+		http.NotFound(w, r)
+		return
+	}
 	if err != nil {
 		http.Error(w, "Error", http.StatusInternalServerError)
 		return
